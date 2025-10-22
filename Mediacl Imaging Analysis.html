@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Assessment with Medical Imaging Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        /* Add to existing styles */
+        .imaging-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+
+        .upload-container {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            background: white;
+        }
+
+        .imaging-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .imaging-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .preview-container {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .analysis-results {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .risk-indicator {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .risk-low { background: #d4edda; color: #155724; }
+        .risk-medium { background: #fff3cd; color: #856404; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+
+        .progress-bar-imaging {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add this section to your existing dashboard -->
+
+    <div class="imaging-section">
+        <h2>Medical Imaging Analysis</h2>
+        <p>Upload medical images for enhanced diabetes complication assessment</p>
+        
+        <div class="imaging-grid">
+            <!-- Retinal Scan Analysis -->
+            <div class="imaging-card">
+                <h3>👁️ Retinal Scan Analysis</h3>
+                <p>Detect diabetic retinopathy from fundus images</p>
+                
+                <div class="upload-container" id="retinalUpload">
+                    <input type="file" id="retinalInput" accept="image/*" style="display: none;">
+                    <div onclick="document.getElementById('retinalInput').click()">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📁</div>
+                        <p>Upload Fundus Image</p>
+                        <small>JPEG, PNG up to 10MB</small>
+                    </div>
+                </div>
+                
+                <div class="preview-container" id="retinalPreview">
+                    <span>Image preview will appear here</span>
+                </div>
+                
+                <div class="analysis-results" id="retinalResults" style="display: none;">
+                    <h4>Retinopathy Analysis</h4>
+                    <div id="retinopathyFindings"></div>
+                    <div class="progress-bar-imaging">
+                        <div class="progress-fill" id="retinopathyProgress" style="width: 0%"></div>
+                    </div>
+                    <div id="retinopathyRisk" class="risk-indicator risk-low">Low Risk</div>
+                </div>
+            </div>
+
+            <!-- Foot Imaging Analysis -->
+            <div class="imaging-card">
+                <h3>🦶 Foot Imaging Analysis</h3>
+                <p>Assess diabetic neuropathy and foot complications</p>
+                
+                <div class="upload-container" id="footUpload">
+                    <input type="file" id="footInput" accept="image/*" style="display: none;">
+                    <div onclick="document.getElementById('footInput').click()">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📁</div>
+                        <p>Upload Foot Image</p>
+                        <small>JPEG, PNG up to 10MB</small>
+                    </div>
+                </div>
+                
+                <div class="preview-container" id="footPreview">
+                    <span>Image preview will appear here</span>
+                </div>
+                
+                <div class="analysis-results" id="footResults" style="display: none;">
+                    <h4>Neuropathy Assessment</h4>
+                    <div id="neuropathyFindings"></div>
+                    <div class="progress-bar-imaging">
+                        <div class="progress-fill" id="neuropathyProgress" style="width: 0%"></div>
+                    </div>
+                    <div id="neuropathyRisk" class="risk-indicator risk-low">Low Risk</div>
+                </div>
+            </div>
+
+            <!-- Body Composition Analysis -->
+            <div class="imaging-card">
+                <h3>⚖️ Body Composition</h3>
+                <p>Analyze body fat distribution and metabolic risk</p>
+                
+                <div class="upload-container" id="bodyUpload">
+                    <input type="file" id="bodyInput" accept="image/*" style="display: none;">
+                    <div onclick="document.getElementById('bodyInput').click()">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">📁</div>
+                        <p>Upload Body Image</p>
+                        <small>JPEG, PNG up to 10MB</small>
+                    </div>
+                </div>
+                
+                <div class="preview-container" id="bodyPreview">
+                    <span>Image preview will appear here</span>
+                </div>
+                
+                <div class="analysis-results" id="bodyResults" style="display: none;">
+                    <h4>Body Composition Analysis</h4>
+                    <div id="bodyFindings"></div>
+                    <div class="progress-bar-imaging">
+                        <div class="progress-fill" id="bodyProgress" style="width: 0%"></div>
+                    </div>
+                    <div id="bodyRisk" class="risk-indicator risk-low">Low Risk</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Medical Imaging Analysis Engine
+        class MedicalImagingAnalyzer {
+            constructor() {
+                this.models = {
+                    retinopathy: this.analyzeRetinopathy.bind(this),
+                    neuropathy: this.analyzeNeuropathy.bind(this),
+                    bodyComposition: this.analyzeBodyComposition.bind(this)
+                };
+            }
+
+            // Retinal Scan Analysis
+            async analyzeRetinopathy(imageData) {
+                // Simulate AI analysis - in production, this would call a trained CNN model
+                const findings = {
+                    microaneurysms: Math.random() * 100,
+                    hemorrhages: Math.random() * 100,
+                    exudates: Math.random() * 100,
+                    cottonWoolSpots: Math.random() * 100
+                };
+
+                // Calculate overall risk score
+                const riskScore = (
+                    findings.microaneurysms * 0.3 +
+                    findings.hemorrhages * 0.3 +
+                    findings.exudates * 0.25 +
+                    findings.cottonWoolSpots * 0.15
+                );
+
+                return {
+                    riskScore: riskScore,
+                    severity: this.getSeverityLevel(riskScore),
+                    findings: findings,
+                    recommendations: this.getRetinopathyRecommendations(riskScore)
+                };
+            }
+
+            // Foot Imaging Analysis
+            async analyzeNeuropathy(imageData) {
+                // Analyze foot images for neuropathic changes
+                const findings = {
+                    ulcerationRisk: Math.random() * 100,
+                    callusFormation: Math.random() * 100,
+                    deformityPresence: Math.random() * 100,
+                    skinChanges: Math.random() * 100
+                };
+
+                const riskScore = (
+                    findings.ulcerationRisk * 0.4 +
+                    findings.callusFormation * 0.2 +
+                    findings.deformityPresence * 0.25 +
+                    findings.skinChanges * 0.15
+                );
+
+                return {
+                    riskScore: riskScore,
+                    severity: this.getSeverityLevel(riskScore),
+                    findings: findings,
+                    recommendations: this.getNeuropathyRecommendations(riskScore)
+                };
+            }
+
+            // Body Composition Analysis
+            async analyzeBodyComposition(imageData) {
+                // Analyze body shape and fat distribution
+                const findings = {
+                    visceralFatEstimate: Math.random() * 100,
+                    waistToHipRatio: 0.7 + Math.random() * 0.5,
+                    androidGynoidRatio: 0.8 + Math.random() * 0.4,
+                    muscleMassEstimate: 30 + Math.random() * 50
+                };
+
+                const riskScore = (
+                    findings.visceralFatEstimate * 0.4 +
+                    (findings.waistToHipRatio > 0.9 ? 30 : 0) +
+                    (findings.androidGynoidRatio > 1.0 ? 20 : 0)
+                );
+
+                return {
+                    riskScore: Math.min(riskScore, 100),
+                    severity: this.getSeverityLevel(riskScore),
+                    findings: findings,
+                    recommendations: this.getBodyCompRecommendations(riskScore, findings)
+                };
+            }
+
+            getSeverityLevel(score) {
+                if (score < 25) return { level: 'low', color: 'risk-low' };
+                if (score < 50) return { level: 'mild', color: 'risk-low' };
+                if (score < 75) return { level: 'moderate', color: 'risk-medium' };
+                return { level: 'severe', color: 'risk-high' };
+            }
+
+            getRetinopathyRecommendations(score) {
+                if (score < 25) return ["Annual retinal screening recommended", "Maintain good glycemic control"];
+                if (score < 50) return ["6-month follow-up with ophthalmologist", "Tight blood pressure control"];
+                if (score < 75) return ["Urgent ophthalmology referral", "Consider laser treatment"];
+                return ["Emergency ophthalmology consultation", "High risk of vision loss"];
+            }
+
+            getNeuropathyRecommendations(score) {
+                if (score < 25) return ["Annual foot examination", "Proper footwear education"];
+                if (score < 50) return ["Podiatry referral recommended", "Daily foot inspections"];
+                if (score < 75) return ["Urgent podiatry assessment", "Specialized footwear needed"];
+                return ["Immediate wound care referral", "High ulceration risk - frequent monitoring"];
+            }
+
+            getBodyCompRecommendations(score, findings) {
+                const recommendations = [];
+                if (findings.waistToHipRatio > 0.9) {
+                    recommendations.push("High waist-to-hip ratio indicates increased cardiovascular risk");
+                }
+                if (findings.visceralFatEstimate > 50) {
+                    recommendations.push("High visceral fat - focus on abdominal exercises and diet");
+                }
+                if (score > 50) {
+                    recommendations.push("Consider metabolic syndrome evaluation");
+                }
+                return recommendations.length > 0 ? recommendations : ["Healthy body composition maintained"];
+            }
+        }
+
+        // Initialize analyzer
+        const imagingAnalyzer = new MedicalImagingAnalyzer();
+
+        // Image Upload Handlers
+        function setupImageUpload(inputId, previewId, resultsId, analyzerType) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const results = document.getElementById(resultsId);
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Show preview
+                        preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Uploaded image">`;
+                        
+                        // Show analysis section
+                        results.style.display = 'block';
+                        
+                        // Simulate analysis
+                        simulateAnalysis(analyzerType, results);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Setup all upload handlers
+        setupImageUpload('retinalInput', 'retinalPreview', 'retinalResults', 'retinopathy');
+        setupImageUpload('footInput', 'footPreview', 'footResults', 'neuropathy');
+        setupImageUpload('bodyInput', 'bodyPreview', 'bodyResults', 'bodyComposition');
+
+        // Simulate AI Analysis with Progress
+        async function simulateAnalysis(type, resultsContainer) {
+            const progressBar = resultsContainer.querySelector('.progress-fill');
+            const findingsContainer = resultsContainer.querySelector('#retinopathyFindings, #neuropathyFindings, #bodyFindings');
+            const riskIndicator = resultsContainer.querySelector('#retinopathyRisk, #neuropathyRisk, #bodyRisk');
+
+            // Simulate processing steps
+            for (let i = 0; i <= 100; i += 10) {
+                progressBar.style.width = `${i}%`;
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // Get analysis results
+            const analysis = await imagingAnalyzer.models[type]();
+
+            // Display results
+            findingsContainer.innerHTML = `
+                <p><strong>Risk Score:</strong> ${Math.round(analysis.riskScore)}%</p>
+                <p><strong>Severity:</strong> ${analysis.severity.level}</p>
+                <p><strong>Recommendations:</strong></p>
+                <ul>
+                    ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+            `;
+
+            // Update risk indicator
+            riskIndicator.textContent = `${analysis.severity.level.charAt(0).toUpperCase() + analysis.severity.level.slice(1)} Risk`;
+            riskIndicator.className = `risk-indicator ${analysis.severity.color}`;
+
+            // Update overall diabetes assessment with imaging findings
+            updateDiabetesAssessmentWithImaging(type, analysis);
+        }
+
+        function updateDiabetesAssessmentWithImaging(type, analysis) {
+            // Integrate imaging findings into overall assessment
+            const currentScore = parseInt(document.getElementById('type2Percent').textContent);
+            
+            let adjustment = 0;
+            switch(type) {
+                case 'retinopathy':
+                    adjustment = analysis.riskScore * 0.1; // 10% weight
+                    break;
+                case 'neuropathy':
+                    adjustment = analysis.riskScore * 0.08; // 8% weight
+                    break;
+                case 'bodyComposition':
+                    adjustment = analysis.riskScore * 0.12; // 12% weight
+                    break;
+            }
+
+            // Update the probability display (simplified example)
+            const newScore = Math.min(currentScore + adjustment, 95);
+            document.getElementById('type2Percent').textContent = `${Math.round(newScore)}%`;
+            
+            // Add imaging findings to risk factors
+            addImagingRiskFactors(type, analysis);
+        }
+
+        function addImagingRiskFactors(type, analysis) {
+            const riskContainer = document.getElementById('riskFactors');
+            let riskText = '';
+            
+            switch(type) {
+                case 'retinopathy':
+                    riskText = `Retinopathy Risk: ${analysis.severity.level} (${Math.round(analysis.riskScore)}%)`;
+                    break;
+                case 'neuropathy':
+                    riskText = `Neuropathy Risk: ${analysis.severity.level} (${Math.round(analysis.riskScore)}%)`;
+                    break;
+                case 'bodyComposition':
+                    riskText = `Body Composition Risk: ${analysis.severity.level} (${Math.round(analysis.riskScore)}%)`;
+                    break;
+            }
+
+            const riskElement = document.createElement('div');
+            riskElement.className = `risk-item risk-${analysis.severity.level === 'severe' ? 'high' : analysis.severity.level === 'moderate' ? 'medium' : 'low'}`;
+            riskElement.innerHTML = `
+                <div>
+                    <strong>${type.charAt(0).toUpperCase() + type.slice(1)} Assessment</strong>
+                    <div style="font-size: 0.9rem; color: #666;">${riskText}</div>
+                </div>
+                <span style="text-transform: capitalize; font-weight: 600;">${analysis.severity.level} risk</span>
+            `;
+            
+            riskContainer.appendChild(riskElement);
+        }
+
+        // Advanced: Integration with actual AI models (conceptual)
+        class AdvancedImagingAI {
+            constructor() {
+                // These would be pre-trained TensorFlow.js models
+                this.retinopathyModel = null;
+                this.neuropathyModel = null;
+                this.bodyCompModel = null;
+            }
+
+            async loadModels() {
+                // Load pre-trained models
+                try {
+                    this.retinopathyModel = await tf.loadGraphModel('models/retinopathy/model.json');
+                    this.neuropathyModel = await tf.loadGraphModel('models/neuropathy/model.json');
+                    this.bodyCompModel = await tf.loadGraphModel('models/bodycomp/model.json');
+                } catch (error) {
+                    console.warn('AI models not available, using simulated analysis');
+                }
+            }
+
+            async analyzeWithAI(imageElement, modelType) {
+                if (!this[`${modelType}Model`]) {
+                    return await imagingAnalyzer.models[modelType]();
+                }
+
+                // Preprocess image for AI model
+                const tensor = tf.browser.fromPixels(imageElement)
+                    .resizeNearestNeighbor([224, 224])
+                    .toFloat()
+                    .expandDims();
+
+                // Run prediction
+                const prediction = this[`${modelType}Model`].predict(tensor);
+                const results = await prediction.data();
+
+                // Clean up
+                tensor.dispose();
+                prediction.dispose();
+
+                return this.processAIPrediction(results, modelType);
+            }
+
+            processAIPrediction(results, modelType) {
+                // Process raw AI output into meaningful medical findings
+                // This would be specific to each trained model
+                return {
+                    riskScore: results[0] * 100,
+                    severity: imagingAnalyzer.getSeverityLevel(results[0] * 100),
+                    findings: this.formatAIFindings(results, modelType),
+                    recommendations: imagingAnalyzer[`get${modelType.charAt(0).toUpperCase() + modelType.slice(1)}Recommendations`](results[0] * 100)
+                };
+            }
+
+            formatAIFindings(results, modelType) {
+                // Format AI model output into human-readable findings
+                // Implementation depends on model architecture and training
+                return {
+                    confidence: Math.round(results[0] * 100),
+                    // Additional model-specific findings
+                };
+            }
+        }
+
+        // Initialize advanced AI if needed
+        const advancedAI = new AdvancedImagingAI();
+        // advancedAI.loadModels(); // Uncomment when models are available
+    </script>
+</body>
+</html>
